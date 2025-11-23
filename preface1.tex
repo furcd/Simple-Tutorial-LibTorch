@@ -1,0 +1,168 @@
+\documentclass{article}
+
+%标题作者日期
+\title{1 绪论}
+\author{LibTorch简单教程}
+\date{2025-11-23}
+
+%中文支持
+\usepackage{ctex}
+
+%other packages
+\usepackage{fancybox}
+
+\usepackage{hyperref}
+\hypersetup
+{
+   hidelinks,
+   colorlinks=true,
+   allcolors=blue,
+   pdfstartview=Fit,
+   breaklinks=true
+}
+
+\usepackage{graphicx}
+\usepackage{svg}
+
+
+
+
+
+
+\begin{document}	
+
+\maketitle
+
+\newpage
+
+\section{前言}
+本教程简单学习LibTorch用法。
+所谓学习一个库，可以设计如下评价标准：
+\begin{itemize}
+\item  1）会搜索库的相关资料；
+\item 2） 了解库的设计思路
+\item  3）  掌握库函数用法；
+\item 4） 调试解决报错
+\end{itemize}
+
+\section{查资料}
+\subsection{资料类型}
+俗话说三生万物。学会这个库要收集必需材料：
+\begin{itemize}
+\item  1）原料：官方文档、库源码、附带例程；
+\item  2）解惑：提问AI、大家的各种人脉；
+\item  3）分享：第三方资料如书籍、论坛、交流群等；
+\item  4）重要：心得总结之资料。
+\end{itemize}
+
+\subsection{原始资料}
+原始资料就是库作者提供的第一手信息。
+一般是官方文档、源代码、示例程序三个部分。 
+ 
+ 
+官方文档：
+
+$\quad$\href{  https://docs.pytorch.org/docs/stable/cpp_index.html    }{C++接口介绍页面}
+
+$\quad$\href{  https://docs.pytorch.org/cppdocs/    }{API页面}
+
+$\quad$\href{   https://docs.pytorch.ac.cn/tutorials/advanced/cpp_frontend.html }{官方教程}
+
+ 
+库源码、例程：
+
+$\quad$\href{https://github.com/pytorch/examples/tree/main/cpp   }{源代码和示例程序}
+
+
+\subsection{解惑资料}
+AI提问、认识的人也在搞这个，动用你的人脉都可以。
+
+\subsection{分享资料}
+第三方资料，如书籍、论坛、交流群等
+
+$\quad$\url{  https://github.com/AllentDan/LibtorchTutorials }
+
+$\quad$\url{ https://zhuanlan.zhihu.com/p/609288586  }
+
+$\quad$\url{  https://dataxujing.github.io/libtorch_tutorials }
+
+\includesvg[width=0.40\textwidth]{C:/Users/vic/Pictures/Screenshots/f1}\includesvg[width=0.40\textwidth]{C:/Users/vic/Pictures/Screenshots/f2.svg}
+
+\subsection{重要资料}
+心得总结之资料。自己学习、编程中的经验总结 .
+
+\section{库结构}
+库结构参考API页面顶部第二行的main项
+
+本API大致分为五个部分：
+\begin{itemize}
+\item ATen: 张量支持、张量数学运算、所有的张量及运算最终都归结到这里。
+
+\item Autograd: 给ATen提供自动微分功能。
+
+\item C++ Frontend: 训练和评估模型接口、性能高。
+
+\item TorchScript: JIT接口、加载模型就用这个。
+
+\item C++ Extensions: 高级模块、自定义接口、自定义CUDA行为
+
+\end{itemize} 
+
+
+
+
+\section{库函数}
+\subsection{库函数参考}
+接口原型在API页面顶部第二行的Library API项。
+用法在各个部分都有。
+重要：LibTorch和PyTorch接口相似，可以参考PyTorch资料的用法，在Library API查找。
+
+
+\subsection{库函数学习标准}
+\begin{itemize}
+\item 1）常用的函数接口要熟悉功能、返回值、参数、注意事项
+\item 2）使用过程出现BUG，会调试、分析、解决，并总结规范用法
+\item 3）论文中遇见张量操作、算法，会编写对应张量代码
+
+
+\end{itemize} 
+
+\subsection{库函数BUG调试}
+
+\begin{itemize}
+\item 1）检查环境配置
+\item 2）代码错误：编译错误、运行错误、逻辑错误、拼写错误
+\item 3）使用try catch
+\item 4）打印输出，定位错误位置 
+\item 5）Debug模式
+
+\end{itemize}  
+ 
+
+\section{环境配置}
+\subsection{基本环境}
+Windows 11    C++   VS2022   LibTorch CPU
+
+Windows 11    C++   VS2022   LibTorch GPU
+
+\subsection{额外库}
+OpenCV库，是本教程使用的，同时也能百度到结合LibTorch配置环境的教程
+
+
+
+
+\section{小结}
+1）工欲善其事必先利其器，资料齐全，IDE熟练
+
+
+
+2）动态更新经验，多交流
+
+
+3）这个库参考资料很少，自己要多总结分享
+
+
+
+
+
+\end{document}	
