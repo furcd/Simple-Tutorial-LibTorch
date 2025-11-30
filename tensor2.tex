@@ -1,7 +1,11 @@
-\documentclass[a3paper]{article}
+\documentclass  {article}
 
 %中文支持
 \usepackage{ctex}
+%页边距
+ \usepackage[margin=2.5cm]{geometry}
+%\geometry{a4paper,left=2cm , right=2cm , top=3cm , bottom=3cm }
+
 
 
 %盒子
@@ -70,11 +74,13 @@
 		
 		
 		\subsection{TensorOptions}
-		$TensorOptions$ 属性是一个\ovalbox{class}，定义了多个子属性，具体可以查看源码和文档。这里介绍常用的三个子属性：\ovalbox{$dtype$} \ovalbox{$grad$} \ovalbox{$device$}。
+		$TensorOptions$ 属性是一个\ovalbox{class}，定义了多个子属性，具体可以查看源码和文档。这里介绍常用的子属性：\ovalbox{$dtype$} \ovalbox{$requires\_grad$}\ovalbox{layout} \ovalbox{$device$}。
 		
-		\ovalbox{$dtype$}是指 $Value$ 的存储方式。如果从\ovalbox{int}转化而来，则 \ovalbox{$dtype=kInt$}，同理\ovalbox{$float \rightarrow kFloat$}\ovalbox{$double \rightarrow kDouble$}。\ovalbox{$dtype$}属性可以有其它取值，参看文档和源码。
-		\ovalbox{$grad$} 是指在自动微分时该 \ovalbox{$Tensor$} 是否保留梯度。	  
+		\ovalbox{$dtype$}是指 $Value$ 的存储方式。如果从\ovalbox{int}转化而来，则 \ovalbox{$dtype=kInt$}，同理\ovalbox{$float \rightarrow kFloat$} \\ 
+		\ovalbox{$double \rightarrow kDouble$}。\ovalbox{$dtype$}属性可以有其它取值，参看文档和源码。
+		\ovalbox{$requires\_grad$} 是指在自动微分时该 \ovalbox{$Tensor$} 是否保留梯度。	  
 		\ovalbox{$device$}是指 \ovalbox{$Tensor$} 在哪个设备运算。常见取值有\ovalbox{$device=kCPU$} \ovalbox{$device=kCUDA$}。
+		\ovalbox{layout}是指稠密存储还是稀疏存储。常见取值有\ovalbox{$layout=kStrided$} \ovalbox{$layout=kSparse$}。 
 	
 \section{张量创建}
 		\subsection{工厂函数}
@@ -131,10 +137,9 @@
 		思考一下，我们把视角脱离，不再执着符号外貌。
 		当我们看见类似  \{\{\{   ,    ,   \}, \{   ,    ,   \}\},\{\{   ,    ,   \}, \{   ,    ,   \}\}\}符号时，以张量推算视角和$Size $传参视角会有什么不同的结果？
 		参看下面代码，欢迎补充内容。
-			 
-		 \begin{lstlisting}[caption =\{ C++代码示例 \}  ]
+ 
+\begin{lstlisting}[caption =\{ 数据指针转换 \}  ]
 # include <iostream>
-
 # include <torch/torch.h>
 
 
@@ -171,27 +176,324 @@ int main()
 
 	return 0;
 }
-		 \end{lstlisting}
+\end{lstlisting} 
 		
 		\subsection{转换为非张量}
-		使用\ovalbox{Tensor::data\_ptr<type>()}获取张量数据指针，\ovalbox{type}想要的数据类型。还有一个函数\ovalbox{Tensor::item<type>()}只针对标量使用。
+		使用\ovalbox{Tensor::data\_ptr<type>()}获取张量数据指针，\ovalbox{type}想要的数据类型。还有一个函数\\\ovalbox{Tensor::item<type>()}只针对标量使用。
 		
 		\subsection{使用构造函数}
 		构造函数\ovalbox{torch::Tensor()}可以直接初始化张量，它有多个重载，参见官方文档。这里涉及一个深浅拷贝问题。
 		赋值构造是浅拷贝，内存中的数据只有单份，一荣俱荣一损俱损。使用\ovalbox{Tensor::clone()}函数创建全新的内存空间，以单独存储数据。
 		
-		
+		 
+\section{张量数学运算}
 
-	\section{张量计算}
+\subsection{数学运算概述}
+张量的数学运算主要针对张量的 $Value$ 属性操作，涵盖了算术运算、比较运算、统计运算、数学函数、线性代数操作以及谱操作等内容。在这些运算中，张量的形状（$Size$）会影响运算的方式。对于不同形状的张量，LibTorch 提供了广播机制来确保不同维度的张量能够进行操作。
 
+\subsection{算术运算}
+算术运算是张量计算中最基本的操作，通常包括加法、减法、乘法和除法等运算。
+
+\begin{table}[h!]
+\centering
+\begin{tabular}{|c|c|c|c|}
+\hline
+\textbf{运算} & \textbf{API 函数} & \textbf{功能描述} & \textbf{代码示例} \\
+\hline
+加法 & \texttt{torch::add()} & 逐元素加法  & \texttt{auto result = torch::add(a, b);} \\
+减法 & \texttt{torch::sub()} & 逐元素减法  & \texttt{auto result = torch::sub(a, b);} \\
+乘法 & \texttt{torch::mul()} & 逐元素乘法  & \texttt{auto result = torch::mul(a, b);} \\
+除法 & \texttt{torch::div()} & 逐元素除法  & \texttt{auto result = torch::div(a, b);} \\
+取余 & \texttt{torch::remainder()} & 逐元素取余   & \texttt{auto result = torch::remainder(a, b);} \\
+求幂 & \texttt{torch::pow()} & 逐元素计算幂 & \texttt{auto result = torch::pow(a, 2);} \\
+\hline
+\end{tabular}
+\caption{常见算术运算}
+\end{table}
+
+
+
+\subsection{比较运算}
+比较运算用于对两个张量进行元素级别的比较，返回一个布尔类型的张量，表示每个元素的比较结果。
+
+\begin{table}[h!]
+\centering
+\begin{tabular}{|c|c|c|c|}
+\hline
+\textbf{运算} & \textbf{API 函数} & \textbf{功能描述} & \textbf{代码示例} \\
+\hline
+相等 & \texttt{torch::eq()} &  逐元素 相等 & \texttt{auto result = torch::eq(a, b);} \\
+不等 & \texttt{torch::ne()} &  逐元素 不相等 & \texttt{auto result = torch::ne(a, b);} \\
+大于 & \texttt{torch::gt()} &  逐元素 大于  & \texttt{auto result = torch::gt(a, b);} \\
+小于 & \texttt{torch::lt()} & 逐元素 小于  & \texttt{auto result = torch::lt(a, b);} \\
+大于等于 & \texttt{torch::ge()} & 逐元素 大于等于  & \texttt{auto result = torch::ge(a, b);} \\
+小于等于 & \texttt{torch::le()} & 逐元素 小于等于  & \texttt{auto result = torch::le(a, b);} \\
+\hline
+\end{tabular}
+\caption{常见比较运算}
+\end{table}
+
+\subsection{统计运算}
+统计运算用于计算张量的各种统计信息，常见的包括最大值、最小值、均值、方差等。
+
+\begin{table}[h!]
+\centering
+\begin{tabular}{|c|c|c|c|}
+\hline
+\textbf{运算} & \textbf{API 函数} & \textbf{功能描述} & \textbf{代码示例} \\
+\hline
+求和 & \texttt{torch::sum()} & 所有元素的总和 & \texttt{auto result = torch::sum(a);} \\
+平均值 & \texttt{torch::mean()} & 所有元素平均值 & \texttt{auto result = torch::mean(a);} \\
+最大值 & \texttt{torch::max()} & 所有元素 的最大值 & \texttt{auto result = torch::max(a);} \\
+最小值 & \texttt{torch::min()} & 所有元素的最小值 & \texttt{auto result = torch::min(a);} \\
+标准差 & \texttt{torch::std()} & 所有元素的标准差 & \texttt{auto result = torch::std(a);} \\
+方差 & \texttt{torch::var()} & 所有元素的方差 & \texttt{auto result = torch::var(a);} \\
+中位数 & \texttt{torch::median()} & 所有元素的中位数 & \texttt{auto result = torch::median(a);} \\   
+\hline
+\end{tabular}
+\caption{常见统计运算}
+\end{table}
+
+\subsection{数学函数}
+数学函数广泛用于深度学习中的各种计算，包括对数、指数、平方根等。
+
+\begin{table}[h!]
+\centering
+\begin{tabular}{|c|c|c|c|}
+\hline
+\textbf{运算} & \textbf{API 函数} & \textbf{功能描述} & \textbf{代码示例} \\
+\hline
+指数 & \texttt{torch::exp()} & 逐元素指数 & \texttt{auto result = torch::exp(a);} \\
+对数 & \texttt{torch::log()} & 逐元素自然对数 & \texttt{auto result = torch::log(a);} \\
+平方根 & \texttt{torch::sqrt()} & 逐元素平方根 & \texttt{auto result = torch::sqrt(a);} \\
+绝对值 & \texttt{torch::abs()} & 逐元素绝对值 & \texttt{auto result = torch::abs(a);} \\
+三角函数 & \texttt{torch::sin()} & 逐元素正弦值 & \texttt{auto result = torch::sin(a);} \\
+              & \texttt{torch::cos()} & 逐元素余弦值 & \texttt{auto result = torch::cos(a);} \\
+              & \texttt{torch::tan()} & 逐元素    正切值 & \texttt{auto result = torch::tan(a);} \\
+反三角函数 & \texttt{torch::asin()} & 逐元素反正弦值 & \texttt{auto result = torch::asin(a);} \\
+                 & \texttt{torch::acos()} & 逐元素反余弦值 & \texttt{auto result = torch::acos(a);} \\
+\hline
+\end{tabular}
+\caption{常见数学函数}
+\end{table}
+
+\subsection{线性代数操作}
+线性代数操作是深度学习中常见的基础运算，主要包括矩阵乘法、转置、行列式、逆矩阵等。
+
+\begin{table}[h!]
+\centering
+\begin{tabular}{|c|c|c|l|}
+\hline
+\textbf{运算} & \textbf{API 函数} & \textbf{功能描述} & \textbf{代码示例} \\
+\hline
+矩阵乘法 & \texttt{torch::matmul()} &  & \texttt{auto result = torch::matmul(A, B);} \\
+点积 & \texttt{torch::dot()} & 向量点积 & \texttt{auto result = torch::dot(a, b);} \\
+转置 & \texttt{torch::t()} &  & \texttt{auto result = torch::t(mat);} \\
+行列式 & \texttt{torch::det()} &  & \texttt{auto result = torch::det(mat);} \\
+逆矩阵 & \texttt{torch::inverse()} &  & \texttt{auto result = torch::inverse(mat);} \\
+范数 & \texttt{torch::norm()} &  张量的 Lp 范数   & \texttt{auto result = torch::norm(a, 2);} \\
+LU 分解& \texttt{torch::lu()} &  列主元置换LU分解   & \texttt{auto [P,L,U] = torch::lu(a );} \\
+QR 分解& \texttt{torch::qr()} &      & \texttt{auto [Q,R] = torch::qr(a);} \\
+\hline
+\end{tabular}
+\caption{常见线性代数操作}
+\end{table}
+
+\subsection{谱操作}
+谱操作通常用于频域分析等高级应用，如傅里叶变换和特征值分解。
+
+\begin{table}[h!]
+\centering
+\begin{tabular}{|c|c|c|c|}
+\hline
+\textbf{运算} & \textbf{API 函数} & \textbf{功能描述} & \textbf{代码示例} \\
+\hline
+快速傅里叶变换 & \texttt{torch::fft::fft()} & 一维或多维fft & \texttt{auto ret = torch::fft::fft(a, 2);} \\
+逆快速傅里叶变换 & \texttt{torch::fft::ifft()} &  & \texttt{auto ret = torch::fft::ifft(a, 2);} \\
+特征值分解 & \texttt{torch::eig()} &  & \texttt{auto [val,vec] = torch::eig(a);} \\
+奇异值分解&	 \texttt{torch::svd()} 	& SVD	&  \texttt{auto [U,S,V] = torch::svd(a);} \\ 
+\hline
+\end{tabular}
+\caption{谱操作}
+\end{table}
+
+\subsection{广播机制}
+广播机制允许形状不同的张量进行运算，自动扩展较小张量的形状以匹配较大的张量。广播使得不同大小的张量能够在数学运算中配合使用，而无需手动调整其形状。
+
+\begin{table}[h!]
+\centering
+\begin{tabular}{|c|c|c|}
+\hline
+\textbf{操作} & \textbf{API 函数} & \textbf{功能描述} \\
+\hline
+广播加法 & \texttt{torch::add()} & 在不同形状的张量间执行加法操作 \\
+广播乘法 & \texttt{torch::mul()} & 在不同形状的张量间执行乘法操作 \\
+\hline
+\end{tabular}
+\caption{广播机制示例}
+\end{table}
+
+ 
+ 
+ 
+  
+\section{张量形状操作}
+张量的形状操作主要是针对其 \texttt{Size} 属性进行的，这些操作对于张量的维度、大小及形状的调整和变换至关重要。常见的形状操作包括张量索引、形状变换和张量拼接拆分操作，具体内容如下。
+
+\subsection{张量索引}
+张量索引操作允许我们根据指定位置访问张量中的特定元素或切片。索引操作是处理和选择数据的基础。
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{|c|c|c|c|}
+\hline
+\textbf{操作} & \textbf{函数} & \textbf{功能描述} & \textbf{示例} \\
+\hline
+元素访问 & \texttt{Tensor::operator[]()} & 数组随机访问 & \texttt{auto elem = a[0][1];} \\
+\hline
+切片操作 & \texttt{Tensor::slice()} & 选取连续的元素子集 & \texttt{auto s  = a.slice(0, 0, 2);} \\
+\hline
+getter & \texttt{Tensor::index()} & 索引列表访问值 & \texttt{auto s  = a.index(\{0, 2\}, 0);} \\
+\hline
+setter & \texttt{Tensor::index\_put\_()} & 索引列表修改值 & \texttt{auto b = a.index\_put\_(\{None\}, 1);} \\
+\hline 
+\end{tabular}
+\caption{张量索引操作}
+\end{table}
+
+\subsection{形状变换}
+张量的形状变换操作用于改变张量的维度或结构。LibTorch 提供了多种方法来调整张量的形状，常见的操作包括重塑形状、添加和删除维度等。
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{|c|c|c|c|}
+\hline
+\textbf{操作} & \textbf{函数} & \textbf{功能描述} & \textbf{示例} \\
+\hline
+重塑形状 & \texttt{torch::view()} &   变形，元素个数一致 & \texttt{auto r = a.view(\{3, 2\});} \\
+\hline
+安全重塑 & \texttt{torch::reshape()} & 连续内存版变形 & \texttt{auto r = a.reshape(\{3, 2\});} \\
+\hline
+添加维度 & \texttt{torch::unsqueeze()} & 指定维度插入$Size=1$  & \texttt{auto e = a.unsqueeze(0);} \\
+\hline
+删除维度 & \texttt{torch::squeeze()} & 删除$Size=1$的轴  & \texttt{auto s  = a.squeeze();} \\
+\hline
+重排维度 & \texttt{torch::permute()} & 按索引排列全部维度 & \texttt{auto d =  torch::permute(A,\{0,2,1\});} \\
+\hline
+交换维度 & \texttt{torch::transpose()} & 交换任意两个维度 & \texttt{auto t  = a.transpose(1, 2);} \\
+\hline
+\end{tabular}
+\caption{形状变换操作}
+\end{table}
+
+\subsection{张量拼接拆分}
+张量拼接和拆分操作允许我们将多个张量沿指定维度进行组合或分割。常用于数据的合并或划分。
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{|c|c|p{5cm}|c|}
+\hline
+\textbf{操作} & \textbf{函数} & \textbf{功能描述} & \textbf{示例} \\
+\hline
+堆叠张量 & \texttt{torch::stack()} &  多个张量沿新维度堆叠  & \texttt{auto s = torch::stack(\{a, b\}, 0);} \\
+\hline
+拼接张量 & \texttt{torch::cat()} &  多个张量沿指定维度拼接  & \texttt{auto c = torch::cat(\{a, b\}, 0);} \\
+\hline
+拆分张量 & \texttt{torch::split()} &  沿指定维度拆分   & \texttt{auto s = a.split(2, 0);} \\
+\hline
+均匀拆分  & \texttt{torch::chunk()} &  沿指定维度拆分为指定数量的均匀块 & \texttt{auto ck = a.chunk(3, 0);} \\
+\hline
+\end{tabular}
+\caption{张量拼接拆分操作}
+\end{table}
+ 
+
+
+	\section{张量选项操作}
+	选项操作是指设置$TensorOptions$ 属性的API。 \ovalbox{torch::TensorOptions} 是一个\ovalbox{class}类型，有4个成员函数：\ovalbox{dtype()}\ovalbox{layout()}\ovalbox{device()}\ovalbox{requires\_grad()}。这些成员函数会返回调用对象的引用，仍然是 \ovalbox{torch::TensorOptions}类型，它们的参数可以设定调用对象的属性。这些属性都具有默认值，分别是\ovalbox{dtype=kFloat32}  \ovalbox{layout=kStrided}  \ovalbox{device=kCPU}  \ovalbox{requires\_grad=false}。
 	
-	\section{张量索引}
+	\subsection{创建前指定}
+	共有三种方式指定属性。手动指定全部属性，使用这样的语法。
+	
+	\hspace{\fill}
+	\ovalbox
+	{
+	\begin{minipage}{0.6\textwidth}  % 控制框的宽度
+	\centering
+     auto options =  torch::TensorOptions()
+     
+    .dtype(torch::kFloat32)
+    
+    $\quad\quad$.layout(torch::kStrided)
+    
+   $\quad$ .device(torch::kCUDA, 1)
+   
+   $\quad$ .requires\_grad(true);
+    \end{minipage}
+    }
+    \hspace{\fill}
+     
+     
+     
+    也可以使用\ovalbox{torch::}命名空间下的属性函数，传递参数指定某个属性。函数原型分别是
+    
+    \ovalbox{torch::TensorOptions torch::dtype()}
+    \ovalbox{torch::TensorOptions torch::layout()}
+    
+    \ovalbox{torch::TensorOptions  torch::device()}    
+    \ovalbox{torch::TensorOptions  torch::requires\_grad()}
+    
+    比如\ovalbox{torch::ones(10, torch::TensorOptions().dtype(torch::kFloat32).layout(torch::kStrided))} \\
+    $\iff$ \ovalbox{torch::ones(10, torch::dtype(torch::kFloat32).layout(torch::kStrided))}
+	 
+	 
+	 当只需要指定单个属性时，可以直接赋值属性，会有隐式转换。比如\ovalbox{torch::ones(10, torch::kFloat32)} \\
+	 $\iff$ \ovalbox{torch::ones(10, torch::dtype(torch::kFloat32))} \\	 
+	 $\iff$ \ovalbox{torch::ones(10, torch::TensorOptions().dtype(torch::kFloat32))}
+	 
+	 \subsection{现有张量转换}
+	 以上是创建前设定选项，还可以从现有张量转换选项得到新张量。新张量会另外开辟空间存储数据。使用\ovalbox{Tensor::to()}函数指定新张量的选项。
+	 \begin{itemize}
+	\item 改变$dtype$ \\
+    \ovalbox{ torch::Tensor source\_tensor = torch::randn({2, 3}, torch::kInt64); }\\
+	\ovalbox{ torch::Tensor float\_tensor = source\_tensor.to(torch::kFloat32); }
+	
+	\item 改变$device$ \\	
+	\ovalbox{torch::Tensor gpu\_two\_tensor = float\_tensor.to(torch::Device(torch::kCUDA, 1));}
 
+	\end{itemize} 
+	
+	
+如果有多个GPU，可以创建一个\ovalbox{torch::DeviceGuard}对象指定默认GPU设备。代码如下：
+ \begin{lstlisting}[caption =\{ 全局或局部默认GPU \}  ]
+#include <torch/torch.h>
+#include <iostream>
 
-	\section{张量形状操作}
+int main() {
+    // Check the number of available GPUs
+    int device_count = torch::cuda::device_count();
+    std::cout << "Number of CUDA devices available: " << device_count << std::endl;
 
+    if (device_count > 1) {
+        // Use DeviceGuard to set the current GPU to GPU 1 (if you have multiple GPUs)
+        {
+            torch::DeviceGuard guard(torch::Device(torch::kCUDA, 1 ));  // Set active device to GPU 1
 
-	\section{张量互相操作}
+            // Create a tensor on GPU 1
+            torch::Tensor tensor_on_gpu1 = torch::rand({ 3, 3 }, torch::device({torch::kCUDA, 1}));
+            std::cout << "Tensor on GPU 1:\n" << tensor_on_gpu1 << std::endl;
+        }
+
+        // Now GPU 0 is active again, no need to manually change back
+        torch::Tensor tensor_on_gpu0 = torch::rand({ 3, 3 }, torch::device({torch::kCUDA, 0}));
+        std::cout << "Tensor on GPU 0:\n" << tensor_on_gpu0 << std::endl;
+    }
+
+    return 0;
+}
+
+ \end{lstlisting}
+
 
 
 	\section{张量小结}
