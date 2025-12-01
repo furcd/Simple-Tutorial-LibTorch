@@ -1,0 +1,106 @@
+\documentclass{article}
+
+%title author date
+\title{3 自动求导}
+\author{LibTorch简单教程}
+\date{2025-12-01}
+
+%
+\usepackage{ctex}
+ 
+%页边距
+ \usepackage[margin=2.5cm]{geometry}
+%\geometry{a4paper,left=2cm , right=2cm , top=3cm , bottom=3cm }
+
+
+
+%盒子
+\usepackage{fancybox}
+
+%代码支持
+\usepackage{listings}
+\usepackage[usenames,dvipsnames]{xcolor}
+\definecolor{mygreen}{rgb}{0,0.6,0}
+\definecolor{mygray}{rgb}{0.5,0.5,0.5}
+\definecolor{mymauve}{rgb}{0.58,0,0.82}
+\lstset{
+ backgroundcolor=\color{lightgray},
+ basicstyle=\footnotesize,
+ breakatwhitespace=false,
+ breaklines=true,
+ captionpos=b,
+ commentstyle=\color{mygreen}\bfseries,
+ extendedchars=false,
+ frame=shadowbox,
+ framerule=0.5pt,
+ keepspaces=true,
+ keywordstyle=\color{blue}\bfseries,
+ language=C++,
+ otherkeywords={string},
+ numbers=left,
+ numbersep=5pt,
+ numberstyle=\tiny\color{mygray},
+ rulecolor=\color{black},
+ showspaces=false,
+ showstringspaces=false,
+ showtabs=false,
+ stepnumber=1,
+ stringstyle=\color{mymauve},
+ tabsize=2,
+ title=\lstname
+}
+
+\usepackage{graphics}
+
+
+
+\begin{document}
+
+\maketitle
+
+\newpage
+
+\tableofcontents
+
+\newpage
+
+\section{计算图}
+\subsection{创建计算图}
+假设有一个运算表达式：$f(x,y)=(x+y)(y+1)$，要对$x \texttt{和}	y$分别求偏导数。这是一个多元函数，我们可以把计算过程用图表示出来，这个图就称为计算图。%插入图片 
+在代码中，张量经过任何“可微分”的运算后，张量和“运算”都会被记录在这个图中，运算结束后图就创建成功了。有了这个图，我们就可以实现自动求导。自动求导函数会依赖已存在的计算图求解梯度，并且结束后默认销毁这里创建的计算图。
+
+
+
+\subsection{节点}
+计算过程中，类比多元函数的自变量（叶子节点）和中间变量（非叶子节点），有的张量是被其他张量计算出来的临时变量，这种叫非叶子节点。不由任何张量计算而来，直接存在的叫叶子节点。在计算图中，要重点注意张量的这些属性：是否叶子、是否需要梯度、梯度值、梯度函数。它们可以由这些函数获取：\ovalbox{Tensor::is\_leaf()} 、\ovalbox{Tensor::requires\_grad()} 、 \ovalbox{Tensor::grad()}、 \ovalbox{Tensor::grad\_fn()}。 由叶子节点计算出的节点默认需要梯度。
+
+
+\subsection{静态图和动态图}
+PyTorch是动态图，具有容易理解，灵活的特点。
+
+
+
+
+\section{自动求导函数}
+自动求导
+自动求导常用的API有2个函数、1个类：\ovalbox{torch::autograd::backward()}、\ovalbox{torch::autograd::grad()}、\ovalbox{torch::autograd::function::Function}。
+
+\ovalbox{backward()}函数介绍如下：
+
+功能：自动求解计算图中所有节点的梯度。我们一般使用\ovalbox{Tensor::backward()}函数求导，它内部会调用\ovalbox{torch::autograd::backward()}。
+
+参数：
+
+返回值：
+
+\ovalbox{backward()}函数会累计梯度值到叶子节点，不会自动清零梯度值，所以训练过程需要手动清零梯度值。
+\ovalbox{grad()}函数不累计梯度，仅仅计算并返回梯度值。
+
+\ovalbox{retain\_graph}和\ovalbox{create\_graph}参数的区别是前者控制函数计算图，后者控制梯度计算图，联系是后者利用前者完成创建，创建后两个图就互相独立，销毁与否都不影响对方。%代码示意参数的关系
+
+根据计算图的原理，在求导语句和最终变量语句之间，不可以改变任何变量，才能保证结果正确。如果某个变量被改变，计算图会记录改变后的值，导致结果错误。如果想要修改，使用\ovalbox{Tensor::detach()}把变量剥离计算图，得到数据引用，和原变量共享同一块内存，但是修改不会破坏计算图。
+
+还可以局部控制计算图搭建过程的临时变量是否保存。使用\ovalbox{torch::no\_grad()}函数。
+
+
+\end{document}
