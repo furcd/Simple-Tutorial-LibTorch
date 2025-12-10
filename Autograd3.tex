@@ -82,25 +82,88 @@ PyTorch是动态图，具有容易理解，灵活的特点。
 
 
 \section{自动求导函数}
-自动求导
-自动求导常用的API有2个函数、1个类：\ovalbox{torch::autograd::backward()}、\ovalbox{torch::autograd::grad()}、\ovalbox{torch::autograd::function::Function}。
+ 
+自动求导常用的API有2个函数、1个类：\ovalbox{torch::autograd::backward()}、\ovalbox{torch::autograd::grad()}、\ovalbox{torch::autograd::function::Function< >}。
+这些是原始的API，我们一般使用\ovalbox{Tensor::backward()}函数完成反向求导 。
 
-\ovalbox{backward()}函数介绍如下：
+\subsection{Tensor::backward()}
 
-功能：自动求解计算图中所有节点的梯度。我们一般使用\ovalbox{Tensor::backward()}函数求导，它内部会调用\ovalbox{torch::autograd::backward()}。
+函数介绍如下：
+原型
+\hspace{\fill}
+\ovalbox{
+\begin{minipage}{0.6\textwidth}
+\centering  
+inline void 	Tensor::backward( const Tensor \&gradient = \{\}, \\
+std::optional<bool> retain\_graph = std::nullopt, \\
+bool create\_graph = false, \\
+std::optional<TensorList> inputs = std::nullopt   ) const
+\end{minipage} 
+}
+\hspace{\fill}
+
+ 功能：自动求解当前标量相对于计算图中所有叶子节点的梯度，否则要指定\ovalbox{gradient}参数。它内部会调用\ovalbox{torch::autograd::backward()}。函数会累计（加法）梯度值到叶子节点，不会自动清零梯度值，所以训练过程需要手动清零梯度值。
+ 
+ 参数：一共有四个
+\begin{itemize}
+\item gradient 非标量时，这个函数会计算雅可比向量积，这个参数接收雅可比矩阵，描述分量的上游梯度关系。当前张量非标量，必须指定某种运算关系，把分量规约为新的标量，新标量对分量的梯度矩阵就是这个参数，也称为上游梯度。
+
+\item retain\_graph 这个函数求导时，依赖已经存在的计算图，求导结束后，会默认销毁该计算图。设置\ovalbox{retain\_graph=true}即可保留，方便重复使用。
+
+\item create\_graph 求出来的梯度是一个张量，它也是被运算出来的，那么就会创建另一张计算图描述梯度和自变量的关系。设置\ovalbox{create\_graph=true}即可保留，方便高阶求导。
+
+\item inputs 我们一般用不到，在API页面有说明。
+\end{itemize}
+
+ 返回值：void
+
+
+ \subsection{torch::autograd::grad()}
+ 
+ 函数介绍如下：
+原型
+\hspace{\fill}
+\ovalbox{
+\begin{minipage}{0.7\textwidth}
+\centering  
+ variable\_list torch::autograd::grad(const variable\_list \&outputs, \\
+ const variable\_list \&inputs, \\
+ const variable\_list \&grad\_outputs = \{\}, \\
+ std::optional<bool> retain\_graph = std::nullopt, \\
+ bool create\_graph = false, \\
+ bool allow\_unused = false)
+\end{minipage} 
+}
+\hspace{\fill}
+
+功能：不累计梯度，仅仅计算并返回梯度值。
 
 参数：
+\begin{itemize}
+\item outputs
+\item inputs
+\item grad\_outputs
+\item retain\_graph 同上
+\item create\_graph 同上
+\item allow\_unused
+\end{itemize}
 
-返回值：
-
-\ovalbox{backward()}函数会累计梯度值到叶子节点，不会自动清零梯度值，所以训练过程需要手动清零梯度值。
-\ovalbox{grad()}函数不累计梯度，仅仅计算并返回梯度值。
+返回值： \ovalbox{ variable\_list }类型，可以用\ovalbox{torch::Tensor}接收。返回梯度值。
 
 \ovalbox{retain\_graph}和\ovalbox{create\_graph}参数的区别是前者控制函数计算图，后者控制梯度计算图，联系是后者利用前者完成创建，创建后两个图就互相独立，销毁与否都不影响对方。%代码示意参数的关系
 
-根据计算图的原理，在求导语句和最终变量语句之间，不可以改变任何变量，才能保证结果正确。如果某个变量被改变，计算图会记录改变后的值，导致结果错误。如果想要修改，使用\ovalbox{Tensor::detach()}把变量剥离计算图，得到数据引用，和原变量共享同一块内存，但是修改不会破坏计算图。
+
 
 还可以局部控制计算图搭建过程的临时变量是否保存。使用\ovalbox{torch::no\_grad()}函数。
+
+\subsection{torch::autograd::function::Function< >}
+这是一个模板类。如果我们有额外需求的计算，可以自定义类，公有继承它，重写\ovalbox{forward()}和\ovalbox{backward()}函数，这样自定义运算就变成“可微分运算”了，计算图就能记录此运算，方便自动求导。使用方法在官方仓库中有例子。
+
+\subsection{计算图与自动求导的关系和注意事项}
+计算图是由张量计算过程中自动创建的，自动求导函数只是使用现成的计算图，不会创建新的“函数计算图”，而且还会默认销毁这个图。
+
+
+根据计算图的原理，假设我们已经得到最终变量，下一语句要求导了，在这两语句之间，不可以改变任何图内变量，才能保证结果正确。如果某个变量被改变，计算图会记录改变后的值，导致结果错误。如果想要修改，使用\ovalbox{Tensor::detach()}把变量剥离计算图，得到数据引用，和原变量共享同一块内存，再修改则不会破坏计算图。
 
 
 \end{document}
