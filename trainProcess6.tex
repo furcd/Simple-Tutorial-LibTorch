@@ -1,0 +1,77 @@
+\documentclass{article}
+
+%title author date
+\title{6 训练过程}
+\author{LibTorch简单教程}
+\date{2025-12-12}
+
+%
+\usepackage{ctex}
+ 
+%页边距
+ \usepackage[margin=2.5cm]{geometry}
+%\geometry{a4paper,left=2cm , right=2cm , top=3cm , bottom=3cm }
+
+
+
+%盒子
+\usepackage{fancybox}
+
+%代码支持
+\usepackage{listings}
+\usepackage[usenames,dvipsnames]{xcolor}
+\definecolor{mygreen}{rgb}{0,0.6,0}
+\definecolor{mygray}{rgb}{0.5,0.5,0.5}
+\definecolor{mymauve}{rgb}{0.58,0,0.82}
+\lstset{
+ backgroundcolor=\color{lightgray},
+ basicstyle=\footnotesize,
+ breakatwhitespace=false,
+ breaklines=true,
+ captionpos=b,
+ commentstyle=\color{mygreen}\bfseries,
+ extendedchars=false,
+ frame=shadowbox,
+ framerule=0.5pt,
+ keepspaces=true,
+ keywordstyle=\color{blue}\bfseries,
+ language=C++,
+ otherkeywords={string},
+ numbers=left,
+ numbersep=5pt,
+ numberstyle=\tiny\color{mygray},
+ rulecolor=\color{black},
+ showspaces=false,
+ showstringspaces=false,
+ showtabs=false,
+ stepnumber=1,
+ stringstyle=\color{mymauve},
+ tabsize=2,
+ title=\lstname
+}
+
+\usepackage{graphics}
+
+
+
+\begin{document}
+
+\maketitle
+
+\newpage
+
+\tableofcontents
+
+\newpage
+
+
+\section{手动训练}
+  单sample---label更新参数、全sample---label更新参数、batch更新、epoch更新、理解训练流程
+ 
+ \section{使用数据集训练接口} 
+  使用库函数加载数据集、配合迭代器循环训练
+ \section{多看看别人的训练逻辑}
+ 官方例程有训练模板
+ 
+
+\end{document}
